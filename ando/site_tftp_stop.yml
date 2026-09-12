@@ -1,0 +1,12 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: tftpd-hpa
+      ansible.builtin.systemd:
+        name: tftpd-hpa
+        state: stopped
+      become: yes
+

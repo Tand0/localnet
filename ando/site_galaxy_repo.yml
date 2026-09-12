@@ -1,0 +1,21 @@
+- name: galaxy
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: Create ando directory
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        mode: '0755'
+      loop:
+        - repo
+        - repo/galaxy_repo
+    - name: download
+      ansible.builtin.command:
+        cmd: "ansible-galaxy collection download {{item}} -p ./repo/galaxy_repo"
+      register: download_result
+      # changed_when: "'Saved' in download_result.stdout"
+      loop:
+        - cisco.ios

@@ -1,0 +1,119 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  vars:
+    my_interface: "eth1"  # please check ip a
+
+    dhcp_subnet: "192.168.10.0"
+    dhcp_netmask: "255.255.255.0"
+    dhcp_range_start: "192.168.10.5"
+    dhcp_range_end: "192.168.10.100"
+    dhcp_router: "192.168.10.2"
+
+    tftp_server_ip: "192.168.10.3"
+
+  tasks:
+    - name: BIND9 apt
+      ansible.builtin.apt:
+        name: bind9
+        state: present
+      become: yes
+
+    - name: BIND9 copy
+      ansible.builtin.copy:
+        content: |
+          options {
+            directory "/var/cache/bind";
+            allow-query { 192.168.10.0/24; localhost; };
+            listen-on { 192.168.10.3; 127.0.0.1; };
+            dnssec-validation auto;
+            auth-nxdomain no;
+          };
+        dest: /etc/bind/named.conf.options
+        owner: root
+        group: bind
+        mode: '0644'
+      notify: Restart BIND9
+      become: yes
+
+    - name: ISC DHCP Server
+      ansible.builtin.apt:
+        name: isc-dhcp-server
+        state: present
+      become: yes
+
+    - name: dhcp listen
+      ansible.builtin.lineinfile:
+        path: /etc/default/isc-dhcp-server
+        regexp: "{{item.src}}"
+        line:   "{{item.des}}"
+      become: yes
+      loop:
+        - src: '^INTERFACESv4='
+          des: 'INTERFACESv4="{{ my_interface }}"'
+        - src: 'INTERFACESv6='
+          des: '#INTERFACESv6=""'
+        - src: 'OPTIONS='
+          des: 'OPTIONS="-4"'
+
+    - name: dhcpd.conf 
+      ansible.builtin.blockinfile:
+        path: /etc/dhcp/dhcpd.conf
+        create: yes
+        mode: '0644'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK #"
+        block: |
+          option space pxelinux;
+          option pxelinux.magic code 208 = string;
+          option pxelinux.configfile code 209 = text;
+          option pxelinux.pathprefix code 210 = text;
+          option pxelinux.reboottime code 211 = unsigned integer 32;
+          option architecture-type code 93 = unsigned integer 16;
+          subnet {{ dhcp_subnet }} netmask {{ dhcp_netmask }} {
+            range {{ dhcp_range_start }} {{ dhcp_range_end }};
+              option routers {{ dhcp_router }};
+              option subnet-mask {{ dhcp_netmask }};
+              next-server {{ tftp_server_ip }};
+              if option architecture-type = 00:07 {
+                  filename "bootx64.efi"; # UEFI用ファイル名
+              } else if option architecture-type = 00:09 {
+                  filename "bootx64.efi"; # UEFI用ファイル名
+              } else {
+                  filename "pxelinux.0";  # 従来のBIOS用ファイル名
+              }
+          }
+      notify: Restart DHCP Server
+      become: yes
+
+    - name: Check service status bind9
+      ansible.builtin.command: systemctl is-active bind9
+      register: bind9_status
+      failed_when: bind9_status.rc not in [0, 3]
+      changed_when: bind9_status.stdout == 'inactive'
+      notify: Restart BIND9
+      become: yes
+
+    - name: Check service status isc-dhcp-server
+      ansible.builtin.command: systemctl is-active isc-dhcp-server
+      register: dhcp_status
+      failed_when: dhcp_status.rc not in [0, 3]
+      changed_when: dhcp_status.stdout == 'inactive'
+      notify: Restart DHCP Server
+      become: yes
+
+  handlers:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: restarted
+      become: yes
+
+    - name: Restart DHCP Server
+      ansible.builtin.service:
+        name: isc-dhcp-server
+        state: restarted
+      become: yes
+
+

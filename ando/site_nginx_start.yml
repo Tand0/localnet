@@ -1,0 +1,70 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        name:
+         - nginx
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Create ando directory
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        mode: '0755'
+      loop:
+        - repo
+        - repo/galaxy_repo
+        - repo/pip_repo
+        - repo/rpm_repo
+        - repo/tftp_repo
+
+    - name: Set chmod o+x
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: 'o+x'
+      loop:
+        - "{{ playbook_dir | dirname | dirname }}"
+        - "{{ playbook_dir | dirname }}"
+
+    - name: Enable the default site configuration by creating a symlink
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      become: yes
+  
+    - name: Create a sample index.html
+      ansible.builtin.copy:
+        content: "<h1>Hello from Ansible Nginx!</h1>"
+        dest: repo/index.html
+        mode: '0755'
+
+    - name: Create a sample index.html
+      ansible.builtin.copy:
+        content: |
+          server {
+              listen 80;
+              server_name 192.168.10.3;
+              root /home/user/ando/repo;
+              index index.html;
+              location / {
+                  autoindex on;
+                  try_files $uri $uri/ =404;
+              }
+          }
+        dest: /etc/nginx/sites-available/default
+        mode: '0755'
+      become: yes
+
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+      become: yes
+

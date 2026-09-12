@@ -1,0 +1,53 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: Install chrony package
+      ansible.builtin.apt:
+        name: chrony
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Comment out default public pool servers
+      ansible.builtin.replace:
+        path: /etc/chrony/chrony.conf
+        regexp: '^(pool|server) '
+        replace: '# \1'
+      notify: Restart chrony
+      become: yes
+
+    - name: Configure chrony for isolated local environment
+      ansible.builtin.blockinfile:
+        path: /etc/chrony/chrony.conf
+        insertafter: EOF
+        block: |
+          local stratum 10 orphan
+          allow 192.168.10.0/24
+      notify: Restart chrony
+      become: yes
+
+    - name: Ensure chrony service is enabled and started
+      ansible.builtin.systemd:
+        name: chrony
+        state: started
+        enabled: yes
+      become: yes
+
+    - name: Allow NTP port (123/udp) through UFW firewall
+      ansible.builtin.ufw:
+        rule: allow
+        port: '123'
+        proto: udp
+      become: yes
+
+  handlers:
+    - name: Restart chrony
+      ansible.builtin.systemd:
+        name: chrony
+        state: restarted
+      become: yes
+
+

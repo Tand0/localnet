@@ -1,0 +1,11 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  tasks:
+   - name: 複数のファイルとディレクトリをまとめる
+     community.general.archive:
+       path:
+         - .
+       dest: ../ando.zip
+       format: zip

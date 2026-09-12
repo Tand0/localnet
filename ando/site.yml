@@ -1,0 +1,8 @@
+- ansible.builtin.import_playbook: site_ntp_start.yml
+- ansible.builtin.import_playbook: site_tftp_start.yml
+- ansible.builtin.import_playbook: site_nginx_start.yml
+- ansible.builtin.import_playbook: site_dhcp_start.yml
+- ansible.builtin.import_playbook: site_rpm_repo.yml
+- ansible.builtin.import_playbook: site_pip_repo.yml
+- ansible.builtin.import_playbook: site_galaxy_repo.yml
+

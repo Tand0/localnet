@@ -1,0 +1,12 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: stopped
+      become: yes
+

@@ -1,0 +1,19 @@
+- hosts: rhel_ssh
+  vars_files:
+    - secret.yml
+  vars:
+    local_repo_url: "http://192.168.10.3/repo/rpm_repo/"
+    repo_name: "local-custom-repo"
+  tasks:
+    - name: Add local RPM repository configuration
+      ansible.builtin.yum_repository:
+        name: "{{ repo_name }}"
+        description: "Local Custom RPM Repository via Nginx"
+        baseurl: "{{ local_repo_url }}"
+        enabled: yes
+        gpgcheck: no
+        state: present
+      become: true
+    - name: Clean dnf/yum cache and update metadata
+      ansible.builtin.command: dnf clean all && dnf makecache
+      become: true

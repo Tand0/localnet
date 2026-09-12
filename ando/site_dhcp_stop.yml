@@ -1,0 +1,19 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: Restart BIND9
+      ansible.builtin.service:
+        name: bind9
+        state: stopped
+      become: yes
+
+    - name: Restart DHCP Server
+      ansible.builtin.service:
+        name: isc-dhcp-server
+        state: stopped
+      become: yes
+
+

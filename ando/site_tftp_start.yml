@@ -1,0 +1,46 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  vars:
+    tftp_root: "/home/user/ando/repo/tftp_repo"
+    tftp_address: "0.0.0.0:69"
+  gather_facts: yes
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        name:
+         - tftpd-hpa
+         - syslinux-common
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Configure tftpd-hpa (Debian/Ubuntu)
+      ansible.builtin.lineinfile:
+        path: /etc/default/tftpd-hpa
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+      notify: Restart tftpd-hpa
+      become: yes
+      loop:
+        - regexp: '^TFTP_DIRECTORY='
+          line: 'TFTP_DIRECTORY="{{ tftp_root }}"'
+        - regexp: '^TFTP_ADDRESS='
+          line: 'TFTP_ADDRESS="{{ tftp_address }}"'
+
+
+    - name: Start and enable TFTP service (Debian)
+      ansible.builtin.systemd:
+        name: tftpd-hpa
+        state: started
+        enabled: yes
+      become: yes
+
+  handlers:
+    - name: Restart tftpd-hpa
+      ansible.builtin.systemd:
+        name: tftpd-hpa
+        state: restarted
+      become: yes
+

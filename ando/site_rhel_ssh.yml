@@ -1,0 +1,3 @@
+- hosts: rhel_ssh
+  vars_files:
+    - secret.yml

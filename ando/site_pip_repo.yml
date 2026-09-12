@@ -1,0 +1,26 @@
+- name: ngix
+  hosts: localhost
+  vars_files:
+    - secret.yml
+  gather_facts: yes
+  tasks:
+    - name: Install docker library via pip
+      ansible.builtin.pip:
+        name: pip2pi
+        state: present
+
+    - name: Create ando directory
+      ansible.builtin.file:
+        path: "{{item}}"
+        state: directory
+        mode: '0755'
+      loop:
+        - repo
+        - repo/pip_repo
+    - name: pip download
+      ansible.builtin.command:
+        cmd: "pip download {{item}} -d repo/pip_repo/{{item | lower}}"
+      register: download_result
+      changed_when: "'Saved' in download_result.stdout"
+      loop:
+        - numpy

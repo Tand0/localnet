@@ -1,3 +1,4 @@
 - hosts: rhel_ssh
   vars_files:
     - secret.yml
+    - vars/external_vars.yml

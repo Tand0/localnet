@@ -2,6 +2,7 @@
   hosts: localhost
   vars_files:
     - secret.yml
+    - vars/external_vars.yml
   gather_facts: yes
   tasks:
     - name: Update apt 
@@ -12,6 +13,7 @@
         update_cache: yes
       become: yes
 
-    - ansible.builtin.command: createrepo_c repo/rpm_repo/
+    - ansible.builtin.command: "createrepo_c {{ex_rpm_root}}"
+      become: yes
 
 

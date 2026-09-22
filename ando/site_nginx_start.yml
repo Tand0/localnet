@@ -2,6 +2,10 @@
   hosts: localhost
   vars_files:
     - secret.yml
+    - vars/external_vars.yml
+  environment:
+    LANG: en_US.UTF-8
+    LC_ALL: en_US.UTF-8
   gather_facts: yes
   tasks:
     - name: Update apt cache
@@ -9,28 +13,44 @@
         name:
          - nginx
         state: present
-        update_cache: yes
       become: yes
+      become_method: sudo
+      become_user: root
 
-    - name: Create ando directory
+    - name: Create base directory
       ansible.builtin.file:
         path: "{{item}}"
         state: directory
         mode: '0755'
       loop:
-        - repo
-        - repo/galaxy_repo
-        - repo/pip_repo
-        - repo/rpm_repo
-        - repo/tftp_repo
+        - "{{ex_root_repo}}"
+        - "{{ex_tftp_root}}"
+        - "{{ex_galaxy_root}}"
+        - "{{ex_pip_root}}"
+        - "{{ex_galaxy_root}}"
+        - "{{ex_rpm_root}}"
+      become: true
 
-    - name: Set chmod o+x
-      ansible.builtin.file:
-        path: "{{ item }}"
-        mode: 'o+x'
-      loop:
-        - "{{ playbook_dir | dirname | dirname }}"
-        - "{{ playbook_dir | dirname }}"
+    - name: Build parent directory list
+      shell: |
+        p=$(readlink -f "{{ ex_tftp_root }}")
+        while [ "$p" != "/" ]; do
+          p=$(dirname "$p")
+          echo "$p"
+        done
+      register: parent_dirs_raw
+
+    - name: Convert to list
+      set_fact:
+        parent_dirs: "{{ parent_dirs_raw.stdout_lines }}"
+
+    - name: chmod o+rx for all parent directories
+      shell: |
+        chmod o+rx "{{ item }}"
+      loop: "{{ parent_dirs }}"
+      args:
+        executable: /bin/bash
+      become: yes
 
     - name: Enable the default site configuration by creating a symlink
       ansible.builtin.file:
@@ -42,16 +62,17 @@
     - name: Create a sample index.html
       ansible.builtin.copy:
         content: "<h1>Hello from Ansible Nginx!</h1>"
-        dest: repo/index.html
+        dest: "{{ex_root_repo}}/index.html"
         mode: '0755'
+      become: yes
 
     - name: Create a sample index.html
       ansible.builtin.copy:
         content: |
           server {
               listen 80;
-              server_name 192.168.10.3;
-              root /home/user/ando/repo;
+              server_name {{ex_root_server}};
+              root {{ex_root_repo}};
               index index.html;
               location / {
                   autoindex on;

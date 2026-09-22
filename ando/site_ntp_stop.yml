@@ -2,6 +2,7 @@
   hosts: localhost
   vars_files:
     - secret.yml
+    - vars/external_vars.yml
   gather_facts: yes
   tasks:
     - name: Ensure chrony service is stopped

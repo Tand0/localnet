@@ -2,6 +2,7 @@
   hosts: localhost
   vars_files:
     - secret.yml
+    - vars/external_vars.yml
   gather_facts: yes
   tasks:
     - name: Install chrony package
@@ -25,7 +26,7 @@
         insertafter: EOF
         block: |
           local stratum 10 orphan
-          allow 192.168.10.0/24
+          allow {{ex_ip_bcast}}
       notify: Restart chrony
       become: yes
 

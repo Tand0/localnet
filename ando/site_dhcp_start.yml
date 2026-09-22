@@ -2,18 +2,8 @@
   hosts: localhost
   vars_files:
     - secret.yml
+    - vars/external_vars.yml
   gather_facts: yes
-  vars:
-    my_interface: "eth1"  # please check ip a
-
-    dhcp_subnet: "192.168.10.0"
-    dhcp_netmask: "255.255.255.0"
-    dhcp_range_start: "192.168.10.5"
-    dhcp_range_end: "192.168.10.100"
-    dhcp_router: "192.168.10.2"
-
-    tftp_server_ip: "192.168.10.3"
-
   tasks:
     - name: BIND9 apt
       ansible.builtin.apt:
@@ -26,8 +16,8 @@
         content: |
           options {
             directory "/var/cache/bind";
-            allow-query { 192.168.10.0/24; localhost; };
-            listen-on { 192.168.10.3; 127.0.0.1; };
+            allow-query {{ex_allow_query}};
+            listen-on {{ex_listen_on}};
             dnssec-validation auto;
             auth-nxdomain no;
           };
@@ -52,7 +42,7 @@
       become: yes
       loop:
         - src: '^INTERFACESv4='
-          des: 'INTERFACESv4="{{ my_interface }}"'
+          des: 'INTERFACESv4="{{ ex_my_interface }}"'
         - src: 'INTERFACESv6='
           des: '#INTERFACESv6=""'
         - src: 'OPTIONS='
@@ -75,7 +65,7 @@
             range {{ dhcp_range_start }} {{ dhcp_range_end }};
               option routers {{ dhcp_router }};
               option subnet-mask {{ dhcp_netmask }};
-              next-server {{ tftp_server_ip }};
+              next-server {{ ex_root_server }};
               if option architecture-type = 00:07 {
                   filename "bootx64.efi"; # UEFI用ファイル名
               } else if option architecture-type = 00:09 {

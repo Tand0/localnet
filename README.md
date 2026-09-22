@@ -14,8 +14,8 @@
 ## 基本パラメータ
 
 - 基本的なパラメータとしては以下にしてみましょう。
-    - `/home/user/ando` -- ベースのフォルダ
-    - `/home/user/ando/repo` -- 各ファイルを置くディレクトリ
+    - `/home/use/localnet/ando` -- ベースのフォルダ
+    - `/srv/repo` -- 各ファイルを置くディレクトリ
     - 192.168.10.3 -- インストールを実施するPC(というか ubuntu)
     - 192.168.10.0/24 -- ローカル環境
     - 192.168.10.10-200 -- インストール先の PC
@@ -48,9 +48,9 @@
     - システム設定 ⇒ 日本語
     - キーボードレイアウト ⇒ Japanese/Japanese
     - 地域 ⇒ Tokyo
-    - あなたの名前 ⇒ user
+    - あなたの名前 ⇒ usr
     - コンピュータの名前 ⇒ myserver
-    - ユーザの名前 ⇒ user
+    - ユーザの名前 ⇒ usr
     - パスワード ⇒ abcd1234
     - パスワードの確認 ⇒ abcd1234
     - ログイン時にパスワードを要求する
@@ -64,7 +64,7 @@
                 - MTU: automatic
             - IPv4
                 - IPv4 Method: Manual
-                - Address: 192.168.10.3 255.255.255.0 192.168.10.2
+                - Address: 192.168.10.5 255.255.255.0
                 - DNS: Automatic
             - IPv4
                 - IPv6 Method: Disable
@@ -78,51 +78,61 @@ $ ip a
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
-    inet6 ::1/128 scope host 
+    inet6 ::1/128 scope host noprefixroute
        valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:15:5d:f0:c2:10 brd ff:ff:ff:ff:ff:ff
-    inet 172.25.170.117/20 brd 172.25.175.255 scope global dynamic noprefixroute eth0
-       valid_lft 86111sec preferred_lft 86111sec
-    inet6 fe80::839d:adb8:16f6:2ff7/64 scope link noprefixroute 
+2: enx00e04c69a783: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 00:e0:4c:69:a7:83 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.10.5/24 brd 192.168.10.255 scope global noprefixroute enx00e04c69a783
        valid_lft forever preferred_lft forever
-3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:15:5d:f0:c2:11 brd ff:ff:ff:ff:ff:ff
-    inet 192.168.10.3/24 brd 192.168.10.255 scope global noprefixroute eth1
+3: wlp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether b4:ae:2b:2f:d0:cf brd ff:ff:ff:ff:ff:ff
+    altname wlxb4ae2b2fd0cf
+    inet 192.168.188.200/24 brd 192.168.188.255 scope global dynamic noprefixroute wlp1s0
+       valid_lft 85757sec preferred_lft 85757sec
+    inet6 2001:268:d209:72f7:ac19:700f:d765:666b/64 scope global temporary dynamic
+       valid_lft 86297sec preferred_lft 14297sec
+    inet6 2001:268:d209:72f7:2157:84bc:1d30:d2a6/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 86297sec preferred_lft 14297sec
+    inet6 fe80::1d4c:7c57:13c8:aaa8/64 scope link noprefixroute
        valid_lft forever preferred_lft forever
 $ cat /etc/os-release
-PRETTY_NAME="Ubuntu 22.04 LTS"
+PRETTY_NAME="Ubuntu 26.04.1 LTS"
 NAME="Ubuntu"
-VERSION_ID="22.04"
-VERSION="22.04 LTS (Jammy Jellyfish)"
-VERSION_CODENAME=jammy
+VERSION_ID="26.04"
+VERSION="26.04.1 LTS (Resolute Raccoon)"
+VERSION_CODENAME=resolute
 ID=ubuntu
 ID_LIKE=debian
 HOME_URL="https://www.ubuntu.com/"
 SUPPORT_URL="https://help.ubuntu.com/"
 BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
 PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-UBUNTU_CODENAME=jammy
+UBUNTU_CODENAME=resolute
+LOGO=ubuntu-logo
 $ pwd
-/home/user
+/home/use
 ```
 
-- とりあえず `/home/t-ando/ando` を作ってそこで作業します
+- とりあえず `/home/use/localnet` を作ってそこで作業します
 
 ```shell
 $ sudo apt update
 $ sudo apt upgrade -y
 $ sudo apt install openssh-server
+$ sudo systemctl status ssh
+$ sudo systemctl enable --now ssh
+$ sudo systemctl status ssh
 $ sudo apt install curl
 $ sudo apt install tftp
+$ sudo apt install git
 $ python3 --version
 Python 3.10.4
-$ sudo apt install -y python3.10-venv
+$ sudo apt install -y python3.14-venv
 $ cd 
-$ mkdir ando
-$ cd ando
+$ git clone https://github.com/Tand0/localnet.git
+$ cd localnet/ando
 $ pwd
-/home/user/ando
+/home/user/use/localnet/ando
 $ python3 -m venv .env
 $ source .env/bin/activate
 $ pip install ansible
@@ -195,7 +205,7 @@ ansible-playbook site.yml
 all:
   hosts:
     rhel_ssh:
-      ansible_host: 192.168.10.5
+      ansible_host: 192.168.10.100
       ansible_port: 22
       ansible_user: user
       ansible_password: "{{p_pass}}"
@@ -205,7 +215,7 @@ all:
       ansible_connection: local
       ansible_host: localhost
       ansible_port: 22
-      ansible_python_interpreter: "/home/user/ando/.env/bin/python"
+      ansible_python_interpreter: "/home/use/localnet/ando/.env/bin/python"
       ansible_password: "{{p_pass_local}}"
       ansible_become_password: "{{p_pass_local_sudo}}"
 ```
@@ -224,7 +234,7 @@ all:
 - 起動は [site_nginx_start.yml](./ando/site_nginx_start.yml) で実施します。
 - 停止は [site_nginx_stop.yml](./ando/site_nginx_stop.yml) で実施します。
 - どちらも `ansible-playbook site_XXXX.yml` で実行できます。
-- ここでは `ando/repo` フォルダ配下を公開しています
+- ここでは `/srv/repo` フォルダ配下を公開しています
 - `https://192.168.10.3/` や `https://192.168.10.3/tftp_repo` が外部からアクセスできることを確認してください
 
 ### PXE 用に TFTP を公開する
@@ -232,7 +242,7 @@ all:
 - PXE（Preboot eXecution Environment：ピー・エックス・イー）とは、
   ネットワーク経由でコンピュータを起動（ブート）するための規格・仕組みのことです。
 - PXE を実現するためには tftp を用意する必要があります。
-- 設計として `/home/user/ando/repo/tftp_repo/` の配下が見えるようにします。
+- 設計として `/srv/repo/tftp_repo/` の配下が見えるようにします。
 - 起動は [site_tftp_start.yml](./ando/site_tftp_start.yml) で実施します。
 - 停止は [site_tftp_stop.yml](./ando/site_tftp_stop.yml) で実施します。
 - どちらも `ansible-playbook site_XXXX.yml` で実行できます。
@@ -286,8 +296,8 @@ mkdir -p /tmp/pxe-extract && cd /tmp/pxe-extract
 apt-get download shim-signed grub-efi-amd64-signed
 dpkg-deb -x shim-signed_*.deb shim/
 dpkg-deb -x grub-efi-amd64-signed_*.deb grub/
-sudo cp shim/usr/lib/shim/shimx64.efi.signed.latest /home/user/ando/repo/tftp_repo/bootx64.efi
-sudo cp grub/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /home/user/ando/repo/tftp_repo/bootx64.efi
+sudo cp shim/usr/lib/shim/shimx64.efi.signed.latest /srv/repo/tftp_repo/bootx64.efi
+sudo cp grub/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /srv/repo/tftp_repo/bootx64.efi
 ```
 
 ### rpm のリポジトリフォルダを作りインデックスを生成する(サーバ側)
@@ -296,7 +306,7 @@ sudo cp grub/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /home/user/and
 - このリポジトリを作ってローカルからアクセスできるようにします。
 - 起動は [site_rpm_repo.yml](./ando/site_rpm_repo.yml) で実施します。
 - `ansible-playbook site_XXXX.yml` で実行できます。
-- 設計として `/home/t-ando/ando/rpm/rpm_repo/` の配下に作成します。
+- 設計として `/srv/repo/rpm_repo/` の配下に作成します。
 
 ### rpm のローカルリポジトリを追加する(クライアント側)
 
@@ -311,7 +321,7 @@ sudo cp grub/usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /home/user/and
 - pip は python3でパッケージをインストールを行うときに必要となるファイルです。
 - 起動は [site_pip_repo.yml](./ando/site_pip_repo.yml) で実施します。
 - `ansible-playbook site_XXXX.yml` で実行できます。
-- 設計として `/home/t-ando/ando/rpm/pip_repo/` の配下に作っていきます。
+- 設計として `/srv/repo/pip_repo/` の配下に作っていきます。
     - 現状 `numpy` だけ入れています。必要なものを追加してください。
 
 ### pip のローカルリポジトリを追加する(クライアント側側)
@@ -328,7 +338,7 @@ pip install --extra-index-url http://【NginxサーバーのIP】/repo/pip_repo/
 - ansible-galaxy は ansible で cisco.ios のようなコレクションをインストールするときに必要となる環境です。
 - 起動は [ansible-galaxy.yml](./ando/ansible-galaxy.yml) で実施します。
 - `ansible-playbook site_XXXX.yml` で実行できます。
-- 設計として `/home/t-ando/ando/rpm/galaxy_repo/` の配下に作っていきます。
+- 設計として `/srv/repo/galaxy_repo/` の配下に作っていきます。
     - 現状 `cisco.ios` だけ入れています。必要なものを追加してください。
 
 ## 全てをまとめて実行する

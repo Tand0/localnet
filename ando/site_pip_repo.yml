@@ -2,6 +2,7 @@
   hosts: localhost
   vars_files:
     - secret.yml
+    - vars/external_vars.yml
   gather_facts: yes
   tasks:
     - name: Install docker library via pip
@@ -9,17 +10,9 @@
         name: pip2pi
         state: present
 
-    - name: Create ando directory
-      ansible.builtin.file:
-        path: "{{item}}"
-        state: directory
-        mode: '0755'
-      loop:
-        - repo
-        - repo/pip_repo
     - name: pip download
       ansible.builtin.command:
-        cmd: "pip download {{item}} -d repo/pip_repo/{{item | lower}}"
+        cmd: "pip download {{item}} -d {{ex_rpm_root}}/{{item | lower}}"
       register: download_result
       changed_when: "'Saved' in download_result.stdout"
       loop:

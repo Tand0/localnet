@@ -1,15 +1,13 @@
 - hosts: rhel_ssh
   vars_files:
     - secret.yml
-  vars:
-    local_repo_url: "http://192.168.10.3/repo/rpm_repo/"
-    repo_name: "local-custom-repo"
+    - vars/external_vars.yml
   tasks:
     - name: Add local RPM repository configuration
       ansible.builtin.yum_repository:
-        name: "{{ repo_name }}"
+        name: "{{ ex_repo_name }}"
         description: "Local Custom RPM Repository via Nginx"
-        baseurl: "{{ local_repo_url }}"
+        baseurl: "{{ ex_local_repo_url }}"
         enabled: yes
         gpgcheck: no
         state: present

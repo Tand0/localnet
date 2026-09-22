@@ -2,9 +2,7 @@
   hosts: localhost
   vars_files:
     - secret.yml
-  vars:
-    tftp_root: "/home/user/ando/repo/tftp_repo"
-    tftp_address: "0.0.0.0:69"
+    - vars/external_vars.yml
   gather_facts: yes
   tasks:
     - name: Update apt cache
@@ -25,10 +23,9 @@
       become: yes
       loop:
         - regexp: '^TFTP_DIRECTORY='
-          line: 'TFTP_DIRECTORY="{{ tftp_root }}"'
+          line: 'TFTP_DIRECTORY="{{ ex_tftp_root }}"'
         - regexp: '^TFTP_ADDRESS='
-          line: 'TFTP_ADDRESS="{{ tftp_address }}"'
-
+          line: 'TFTP_ADDRESS="{{ ex_tftp_address }}"'
 
     - name: Start and enable TFTP service (Debian)
       ansible.builtin.systemd:

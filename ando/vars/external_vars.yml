@@ -1,0 +1,19 @@
+ex_dest_zip: ../../ando.zip
+ex_my_interface: "enx00e04c69a783"  # please check ip a
+ex_root_server: 192.168.10.5
+ex_root_repo: /srv/repo
+ex_tftp_root: "/srv/repo/tftp_repo"
+ex_galaxy_root: "/srv/repo/galaxy_repo"
+ex_pip_root: "/srv/repo/pip_repo"
+ex_rpm_root: "/srv/repo/rpm_repo"
+ex_tftp_address: "0.0.0.0:69"
+ex_local_repo_url: "http://192.168.10.3/repo/rpm_repo/"
+ex_repo_name: "local-custom-repo"
+ex_ip_bcast: "192.168.10.0/24"
+ex_allow_query: "{ 192.168.10.0/24; localhost; }"
+ex_listen_on: "{ 192.168.10.3; 127.0.0.1; }"
+dhcp_subnet: "192.168.10.0"
+dhcp_netmask: "255.255.255.0"
+dhcp_range_start: "192.168.10.100"
+dhcp_range_end: "192.168.10.200"
+dhcp_router: "192.168.10.1"
